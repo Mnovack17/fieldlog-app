@@ -12,7 +12,7 @@ workflows:
         distribution_type: app_store
         bundle_identifier: com.directservicesgroup.fieldlog
       vars:
-        APP_STORE_APPLE_ID: 0000000000       # Replace with the numeric Apple ID
+        APP_STORE_APPLE_ID: 6811898725       # Replace with the numeric Apple ID
                                               # shown for this app in App Store
                                               # Connect once you've created the
                                               # app record there.
