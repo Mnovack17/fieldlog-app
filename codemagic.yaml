@@ -1,4 +1,3 @@
-yaml
 workflows:
   ios-testflight:
     name: Field Log - iOS TestFlight
