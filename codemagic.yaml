@@ -1,0 +1,51 @@
+workflows:
+  ios-testflight:
+    name: Field Log - iOS TestFlight
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    integrations:
+      app_store_connect: fieldlog_asc_key   # Name this exactly when you add the
+                                             # App Store Connect API key in
+                                             # Codemagic > Teams > Integrations.
+    environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.directservicesgroup.fieldlog
+      vars:
+        APP_STORE_APPLE_ID: 0000000000       # Replace with the numeric Apple ID
+                                              # shown for this app in App Store
+                                              # Connect once you've created the
+                                              # app record there.
+      flutter: stable
+      xcode: latest
+      cocoapods: default
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: main
+          include: true
+      cancel_previous_builds: true
+    scripts:
+      - name: Install Flutter dependencies
+        script: flutter packages pub get
+      - name: Install CocoaPods dependencies
+        script: |
+          find . -name "Podfile" -maxdepth 2 -execdir pod install \;
+      - name: Set up code signing
+        script: |
+          xcode-project use-profiles
+      - name: Build iOS release IPA
+        script: |
+          flutter build ipa --release \
+            --export-options-plist=/Users/builder/export_options.plist
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
+        # Internal testers (your Apple Developer team members) get the build
+        # automatically. Add external testers (technicians) as a named group
+        # in App Store Connect > TestFlight once the first build lands there.

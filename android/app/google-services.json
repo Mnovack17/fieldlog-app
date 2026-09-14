@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "531743423801",
+    "project_id": "daily-field-log",
+    "storage_bucket": "daily-field-log.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:531743423801:android:4ab35b06eff57826c37ce8",
+        "android_client_info": {
+          "package_name": "com.directservicesgroup.fieldlog"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAY3aYFNIFODROJ38ajd2D4bgvJKZmm5A0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,0 +1,20 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Daily field-log entries submitted from the technician app.
+    // request.auth != null covers anonymous sign-in too — every device that
+    // opens the app silently signs in anonymously, so this lets any
+    // technician's phone read and add entries without a real account,
+    // while still blocking completely unauthenticated (e.g. random web)
+    // access to your data.
+    match /entries/{entryId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null;
+      // Entries are append-only from the app today — no edit/delete button
+      // exists yet, so we don't allow update/delete from client devices.
+      allow update, delete: if false;
+    }
+  }
+}
