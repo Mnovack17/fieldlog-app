@@ -1,3 +1,4 @@
+yaml
 workflows:
   ios-testflight:
     name: Field Log - iOS TestFlight
@@ -12,10 +13,9 @@ workflows:
         distribution_type: app_store
         bundle_identifier: com.directservicesgroup.fieldlog
       vars:
-        APP_STORE_APPLE_ID: 6811898725       # Replace with the numeric Apple ID
-                                              # shown for this app in App Store
-                                              # Connect once you've created the
-                                              # app record there.
+        APP_STORE_APPLE_ID: 6811898725       # DSG Field Log's numeric Apple ID
+                                              # in App Store Connect.
+        BUNDLE_ID: com.directservicesgroup.fieldlog
       flutter: stable
       xcode: latest
       cocoapods: default
@@ -27,6 +27,11 @@ workflows:
           include: true
       cancel_previous_builds: true
     scripts:
+      - name: Fetch signing files
+        script: |
+          app-store-connect fetch-signing-files "$BUNDLE_ID" \
+            --type IOS_APP_STORE \
+            --create
       - name: Install Flutter dependencies
         script: flutter packages pub get
       - name: Install CocoaPods dependencies
