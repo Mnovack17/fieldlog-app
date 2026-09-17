@@ -7,6 +7,7 @@ import 'theme.dart';
 import 'models/entry.dart';
 import 'screens/submit_screen.dart';
 import 'screens/dashboard_screen.dart';
+import 'services/notify_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -120,6 +121,9 @@ class _HomeShellState extends State<HomeShell> {
 
   Future<void> _submitEntry(Map<String, dynamic> payload) async {
     await _entriesCol.add(payload);
+    // Fire-and-forget: emails Mike/the office via Web3Forms. Never
+    // blocks or fails the actual submission above.
+    NotifyService.notifyNewEntry(payload);
   }
 
   @override
