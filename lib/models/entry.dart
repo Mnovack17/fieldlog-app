@@ -16,6 +16,7 @@ class FieldEntry {
   final String followUpOwner;
   final String notes;
   final String createdAt;
+  final List<String> photoUrls;
 
   FieldEntry({
     required this.id,
@@ -33,6 +34,7 @@ class FieldEntry {
     required this.followUpOwner,
     required this.notes,
     required this.createdAt,
+    this.photoUrls = const [],
   });
 
   Map<String, dynamic> toMap() => {
@@ -50,6 +52,7 @@ class FieldEntry {
         'followUpOwner': followUpOwner,
         'notes': notes,
         'createdAt': createdAt,
+        'photoUrls': photoUrls,
       };
 
   factory FieldEntry.fromDoc(DocumentSnapshot<Map<String, dynamic>> doc) {
@@ -70,6 +73,7 @@ class FieldEntry {
       followUpOwner: (d['followUpOwner'] ?? '') as String,
       notes: (d['notes'] ?? '') as String,
       createdAt: (d['createdAt'] ?? '') as String,
+      photoUrls: ((d['photoUrls'] as List?) ?? const []).map((e) => e.toString()).toList(),
     );
   }
 }

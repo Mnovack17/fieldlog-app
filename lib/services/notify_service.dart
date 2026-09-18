@@ -66,6 +66,15 @@ class NotifyService {
         lines.addAll(['', 'Notes: $notes']);
       }
 
+      final photoUrls = ((payload['photoUrls'] as List?) ?? const []).map((e) => e.toString()).toList();
+      if (photoUrls.isNotEmpty) {
+        lines.add('');
+        lines.add(photoUrls.length == 1 ? 'Photo:' : 'Photos (${photoUrls.length}):');
+        for (final url in photoUrls) {
+          lines.add(url);
+        }
+      }
+
       final isHighSafety = hasIssue && payload['severity'] == 'high_safety';
       final subject = isHighSafety
           ? '⚠ HIGH SAFETY ISSUE — $team at $site'

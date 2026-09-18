@@ -1,7 +1,10 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/entry.dart';
+import '../services/photo_service.dart';
 import '../theme.dart';
 import '../widgets/autocomplete_field.dart';
 
@@ -34,6 +37,10 @@ class _SubmitScreenState extends State<SubmitScreen> {
   bool _followUp = false;
   bool _showNotes = false;
   bool _submitting = false;
+  String _submitLabel = 'Submit Update';
+
+  final List<XFile> _photos = [];
+  final ImagePicker _picker = ImagePicker();
 
   static const _durationPresets = [
     '1 day', '2 days', '3 days', '4 days', '1 week', '2 weeks', '3 weeks', '1 month', '2+ months'
@@ -64,6 +71,91 @@ class _SubmitScreenState extends State<SubmitScreen> {
     }
     out.sort();
     return out;
+  }
+
+  Future<void> _addFromCamera() async {
+    final shot = await _picker.pickImage(source: ImageSource.camera, maxWidth: 1600, imageQuality: 70);
+    if (shot != null) setState(() => _photos.add(shot));
+  }
+
+  Future<void> _addFromGallery() async {
+    final picked = await _picker.pickMultiImage(maxWidth: 1600, imageQuality: 70);
+    if (picked.isNotEmpty) setState(() => _photos.addAll(picked));
+  }
+
+  void _removePhoto(int index) {
+    setState(() => _photos.removeAt(index));
+  }
+
+  Widget _photoSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _label('Site Photos  *'),
+        const Padding(
+          padding: EdgeInsets.only(bottom: 8, left: 2),
+          child: Text(
+            'At least one photo is required with every entry.',
+            style: TextStyle(fontSize: 12, color: AppColors.inkMuted),
+          ),
+        ),
+        if (_photos.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: List.generate(_photos.length, (i) {
+                return Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.file(
+                        File(_photos[i].path),
+                        width: 76,
+                        height: 76,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                    Positioned(
+                      top: -6,
+                      right: -6,
+                      child: GestureDetector(
+                        onTap: () => _removePhoto(i),
+                        child: Container(
+                          decoration: const BoxDecoration(color: AppColors.crit, shape: BoxShape.circle),
+                          padding: const EdgeInsets.all(3),
+                          child: const Icon(Icons.close, size: 14, color: Colors.white),
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              }),
+            ),
+          ),
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: _addFromCamera,
+                icon: const Icon(Icons.camera_alt_outlined, size: 18),
+                label: const Text('Take Photo'),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: _addFromGallery,
+                icon: const Icon(Icons.photo_library_outlined, size: 18),
+                label: const Text('Choose Photos'),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
   }
 
   @override
@@ -210,10 +302,12 @@ class _SubmitScreenState extends State<SubmitScreen> {
                           decoration: const InputDecoration(hintText: 'Anything else worth flagging'),
                         ),
                       ],
+                      const Divider(height: 32),
+                      _photoSection(),
                       const SizedBox(height: 18),
                       ElevatedButton(
                         onPressed: _submitting ? null : _submit,
-                        child: Text(_submitting ? 'Submitting…' : 'Submit Update'),
+                        child: Text(_submitting ? _submitLabel : 'Submit Update'),
                       ),
                     ],
                   ),
@@ -267,7 +361,27 @@ class _SubmitScreenState extends State<SubmitScreen> {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Pick a status before submitting')));
       return;
     }
-    setState(() => _submitting = true);
+    if (_photos.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Add at least one site photo before submitting')));
+      return;
+    }
+    setState(() {
+      _submitting = true;
+      _submitLabel = 'Uploading photos…';
+    });
+
+    List<String> photoUrls;
+    try {
+      photoUrls = await PhotoService.uploadAll(_photos.map((x) => File(x.path)).toList());
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Couldn't upload photos — check your connection and try again")));
+        setState(() => _submitting = false);
+      }
+      return;
+    }
+
+    if (mounted) setState(() => _submitLabel = 'Submitting…');
 
     final payload = {
       'date': DateFormat('yyyy-MM-dd').format(_date),
@@ -284,6 +398,7 @@ class _SubmitScreenState extends State<SubmitScreen> {
       'followUpOwner': (_hasIssue && _followUp) ? _followUpOwnerCtrl.text.trim() : '',
       'notes': _notesCtrl.text.trim(),
       'createdAt': DateTime.now().toIso8601String(),
+      'photoUrls': photoUrls,
     };
 
     try {
@@ -318,6 +433,8 @@ class _SubmitScreenState extends State<SubmitScreen> {
       _severity = 'none';
       _followUp = false;
       _showNotes = false;
+      _photos.clear();
+      _submitLabel = 'Submit Update';
       // team/site/supervisor intentionally kept — same crew usually logs again tomorrow
     });
   }

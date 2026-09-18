@@ -45,5 +45,9 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Field Log uses the camera to attach site photos to your entries.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Field Log needs access to your photos so you can attach them to a Field Log entry.</string>
 </dict>
 </plist>
